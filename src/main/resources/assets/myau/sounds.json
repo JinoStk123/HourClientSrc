@@ -1,0 +1,20 @@
+{
+  "attack_sfx": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "myau:oxidvideos-ding-small-bell-sfx-411945",
+        "stream": false
+      }
+    ]
+  },
+  "hit_sfx": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "myau:ribhavagrawal-hit-by-a-wood-230542",
+        "stream": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "HUD": {
+    "toggled": true,
+    "key": 0,
+    "hidden": true,
+    "dynamic-island": true,
+    "dynamic-island-radius": 5
+  }
+}
