@@ -89,6 +89,7 @@ public class ClickGui extends GuiScreen {
         renderModules.add(HourClient.moduleManager.getModule(FPScounter.class));
         renderModules.add(HourClient.moduleManager.getModule(WaterMark.class));
         renderModules.add(HourClient.moduleManager.getModule(SeasonDisplay.class));
+        renderModules.add(HourClient.moduleManager.getModule(BedSurroundInfo.class));
 
         List<Module> playerModules = new ArrayList<>();
         playerModules.add(HourClient.moduleManager.getModule(AutoHeal.class));

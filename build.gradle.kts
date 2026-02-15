@@ -56,7 +56,7 @@ loom {
 }
 
 sourceSets.main {
-    output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
+//    output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
 }
 
 // Dependencies:
@@ -125,4 +125,5 @@ val remapJar by tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
     archiveClassifier.set("")
 }
 
-tasks.assemble.get().dependsOn(remapJar)
+
+

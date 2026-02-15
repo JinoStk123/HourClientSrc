@@ -20,6 +20,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import net.minecraftforge.fml.common.Mod; // Import this class
+
+@Mod(modid = "myau", name = "HourClient+", version = "1.7")
 public class HourClient {
     public static String clientName = "&7[&cH&6o&uu&rr Client]&r ";
     public static String version;
@@ -148,6 +151,7 @@ public class HourClient {
         moduleManager.modules.put(ServerIPHider.class, new ServerIPHider());
         moduleManager.modules.put(SeasonDisplay.class, new SeasonDisplay());
         moduleManager.modules.put(GApple.class, new GApple());
+        moduleManager.modules.put(BedSurroundInfo.class, new BedSurroundInfo());
         // moduleManager.modules.put(.class, new myau.module.modules.());
         commandManager.commands.add(new BindCommand());
 
