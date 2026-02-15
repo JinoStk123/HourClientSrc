@@ -63,12 +63,11 @@ public class Scaffold extends Module {
     private boolean towering = false;
     private EnumFacing targetFacing = null;
     public final ModeProperty rotationMode = new ModeProperty("rotations", 2, new String[]{"NONE", "DEFAULT", "BACKWARDS", "SIDEWAYS", "GODBRIDGE"});
-    public final ModeProperty moveFix = new ModeProperty("move-fix", 1, new String[]{"NONE", "SILENT", "STRAIGHT_LOCK"});
+    public final ModeProperty moveFix = new ModeProperty("move-fix", 1, new String[]{"NONE", "SILENT"});
     public final ModeProperty sprintMode = new ModeProperty("sprint", 0, new String[]{"NONE", "VANILLA"});
     public final PercentProperty groundMotion = new PercentProperty("ground-motion", 100);
     public final PercentProperty airMotion = new PercentProperty("air-motion", 100);
     public final PercentProperty speedMotion = new PercentProperty("speed-motion", 100);
-    public final PercentProperty rotationSmoothing = new PercentProperty("rotation-smoothing", 20);
     public final ModeProperty tower = new ModeProperty("tower", 0, new String[]{"NONE", "VANILLA", "EXTRA", "TELLY"});
     public final ModeProperty keepY = new ModeProperty("keep-y", 0, new String[]{"NONE", "VANILLA", "EXTRA", "TELLY"});
     public final BooleanProperty keepYonPress = new BooleanProperty("keep-y-on-press", false, () -> this.keepY.getValue() != 0);
@@ -89,11 +88,11 @@ public class Scaffold extends Module {
     }
 
     private boolean canPlace() {
-        BedNuker bedNuker = (BedNuker) myau.HourClient.moduleManager.modules.get(BedNuker.class);
+        BedNuker bedNuker = (BedNuker) HourClient.moduleManager.modules.get(BedNuker.class);
         if (bedNuker.isEnabled() && bedNuker.isReady()) {
             return false;
         } else {
-            LongJump longJump = (LongJump) myau.HourClient.moduleManager.modules.get(LongJump.class);
+            LongJump longJump = (LongJump) HourClient.moduleManager.modules.get(LongJump.class);
             return !longJump.isEnabled() || !longJump.isAutoMode() || longJump.isJumping();
         }
     }
@@ -425,11 +424,6 @@ public class Scaffold extends Module {
                         this.rotationTick = 3;
                         this.towering = true;
                     }
-                    float smoothingFactor = (float) this.rotationSmoothing.getValue() / 100.0F;
-                    if (smoothingFactor > 0.0F) {
-                        targetYaw = RotationUtil.getSmoothedRotation(event.getYaw(), targetYaw, smoothingFactor);
-                        targetPitch = RotationUtil.getSmoothedRotation(event.getPitch(), targetPitch, smoothingFactor);
-                    }
                     event.setRotation(targetYaw, targetPitch, 3);
                     if (this.moveFix.getValue() == 1) {
                         event.setPervRotation(targetYaw, 3);
@@ -638,26 +632,17 @@ public class Scaffold extends Module {
 
     @EventTarget
     public void onMoveInput(MoveInputEvent event) {
-                if (this.isEnabled()) {
-                    // Apply moveFix logic
-                    if (this.moveFix.getValue() != 0) { // If moveFix is not NONE
-                        if (this.moveFix.getValue() == 2) { // If STRAIGHT_LOCK is enabled
-                            if (MoveUtil.isForwardPressed() && MoveUtil.getLeftValue() == 0) { // Only moving forward
-                                mc.thePlayer.movementInput.moveStrafe = 0.0F;
-                            }
-                        } else if (this.moveFix.getValue() == 1) { // SILENT mode
-                            // Original SILENT mode logic for fixStrafe
-                            if (RotationState.isActived() && RotationState.getPriority() == 3.0F) {
-                                MoveUtil.fixStrafe(RotationState.getSmoothedYaw());
-                            }
-                        }
-                    }
-        
-                    // Original jump logic
-                    if (mc.thePlayer.onGround && this.stage > 0 && MoveUtil.isForwardPressed()) {
-                        mc.thePlayer.movementInput.jump = true;
-                    }
-                }
+        if (this.isEnabled()) {
+            if (this.moveFix.getValue() == 1
+                    && RotationState.isActived()
+                    && RotationState.getPriority() == 3.0F
+                    && MoveUtil.isForwardPressed()) {
+                MoveUtil.fixStrafe(RotationState.getSmoothedYaw());
+            }
+            if (mc.thePlayer.onGround && this.stage > 0 && MoveUtil.isForwardPressed()) {
+                mc.thePlayer.movementInput.jump = true;
+            }
+        }
     }
 
     @EventTarget
@@ -704,7 +689,7 @@ public class Scaffold extends Module {
                         }
                     }
                 }
-                HUD hud = (HUD) myau.HourClient.moduleManager.modules.get(HUD.class);
+                HUD hud = (HUD) HourClient.moduleManager.modules.get(HUD.class);
                 float scale = hud.scale.getValue();
                 GlStateManager.pushMatrix();
                 GlStateManager.scale(scale, scale, 0.0F);

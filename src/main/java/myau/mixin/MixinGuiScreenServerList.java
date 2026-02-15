@@ -12,15 +12,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GuiScreenServerList.class)
 public class MixinGuiScreenServerList {
-    @Shadow private GuiTextField ipEdit;
+    @Shadow private GuiTextField inputField;
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo ci) {
         ServerIPHider serverIPHider = (ServerIPHider) HourClient.moduleManager.getModule(ServerIPHider.class);
         if (serverIPHider != null && serverIPHider.isEnabled()) {
-            String ip = this.ipEdit.getText().toLowerCase();
+            String ip = this.inputField.getText().toLowerCase();
             if (ip.endsWith(".com") || ip.endsWith(".net") || ip.endsWith(".xyz")) {
-                this.ipEdit.setText("hourclient.qzz.io");
+                this.inputField.setText("hourclient.qzz.io");
             }
         }
     }
