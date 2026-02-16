@@ -1,0 +1,5 @@
+Okay, thanks for the update and clarification! It sounds like the OutOfMemoryError was due to system resource contention, which is good to know it wasn't a bug in the code.
+
+I'm glad we could get the ServerIPHider functionality updated for you.
+
+Have a good day!

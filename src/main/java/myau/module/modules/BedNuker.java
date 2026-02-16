@@ -146,7 +146,7 @@ public class BedNuker extends Module {
         double x = (double) blockPos.getX() + 0.5 - mc.thePlayer.posX;
         double y = (double) blockPos.getY() + 0.25 - mc.thePlayer.posY - (double) mc.thePlayer.getEyeHeight();
         double z = (double) blockPos.getZ() + 0.5 - mc.thePlayer.posZ;
-        float[] rotations = RotationUtil.getRotationsTo(x, y, z, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch);
+        float[] rotations = RotationUtil.getRotationsTo(x, y, z, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, 0.0f);
         MovingObjectPosition mop = RotationUtil.rayTrace(rotations[0], rotations[1], 8.0, 1.0F);
         return mop == null ? EnumFacing.UP : mop.sideHit;
     }
@@ -440,7 +440,7 @@ public class BedNuker extends Module {
                 double x = (double) this.targetBed.getX() + 0.5 - mc.thePlayer.posX;
                 double y = (double) this.targetBed.getY() + 0.5 - mc.thePlayer.posY - (double) mc.thePlayer.getEyeHeight();
                 double z = (double) this.targetBed.getZ() + 0.5 - mc.thePlayer.posZ;
-                float[] rotations = RotationUtil.getRotationsTo(x, y, z, event.getYaw(), event.getPitch());
+                float[] rotations = RotationUtil.getRotationsTo(x, y, z, event.getYaw(), event.getPitch(), 0.0f);
                 event.setRotation(rotations[0], rotations[1], 5);
                 event.setPervRotation(this.moveFix.getValue() != 0 ? rotations[0] : mc.thePlayer.rotationYaw, 5);
             }

@@ -8,6 +8,7 @@ import myau.property.properties.BooleanProperty;
 import myau.property.properties.ColorProperty;
 import myau.property.properties.IntProperty;
 import myau.property.properties.ModeProperty;
+import myau.property.properties.FloatProperty;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumParticleTypes;
@@ -19,10 +20,13 @@ public class HitParticleEffects extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
     private final Random random = new Random();
 
-    public final ModeProperty mode = new ModeProperty("mode", 0, new String[]{"Vanilla", "Critical", "Redstone", "Custom"});
+    public final ModeProperty mode = new ModeProperty("mode", 0, new String[]{"Vanilla", "Critical", "Redstone", "Custom", "Orbs"});
     public final IntProperty amount = new IntProperty("amount", 5, 1, 20);
     public final ColorProperty customColor = new ColorProperty("custom-color", new Color(255, 0, 0).getRGB(), () -> this.mode.getValue() == 2 || this.mode.getValue() == 3); // Only show if mode is Redstone or Custom
     public final BooleanProperty onlyCrits = new BooleanProperty("only-crits", false);
+    public final IntProperty orbAmount = new IntProperty("orb-amount", 10, 1, 50, () -> this.mode.getValue() == 4); // Only show if mode is Orbs
+    public final FloatProperty orbSpread = new FloatProperty("orb-spread", 0.5F, 0.1F, 2.0F, () -> this.mode.getValue() == 4); // Only show if mode is Orbs
+    public final IntProperty orbLifetime = new IntProperty("orb-lifetime", 20, 1, 100, () -> this.mode.getValue() == 4); // Only show if mode is Orbs
 
     public HitParticleEffects() {
         super("HitParticleEffects", false);
@@ -78,6 +82,14 @@ public class HitParticleEffects extends Module {
                         customMotionX = 1.0; // Default to red if color is black
                     }
                     mc.theWorld.spawnParticle(EnumParticleTypes.REDSTONE, x + offsetX, y + offsetY, z + offsetZ, customMotionX, customMotionY, customMotionZ);
+                    break;
+                case 4: // Orbs (FIREWORKS_SPARK with randomized motion)
+                    for (int j = 0; j < this.orbAmount.getValue(); j++) {
+                        double motionX = (this.random.nextDouble() * 2.0 - 1.0) * this.orbSpread.getValue();
+                        double motionY = (this.random.nextDouble() * 2.0 - 1.0) * this.orbSpread.getValue();
+                        double motionZ = (this.random.nextDouble() * 2.0 - 1.0) * this.orbSpread.getValue();
+                        mc.theWorld.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, x, y, z, motionX, motionY, motionZ);
+                    }
                     break;
             }
         }
