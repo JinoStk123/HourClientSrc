@@ -10,6 +10,7 @@ import myau.module.Module;
 import myau.property.properties.BooleanProperty;
 import myau.property.properties.ModeProperty;
 import myau.property.properties.PercentProperty;
+import myau.property.properties.FloatProperty;
 import myau.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -77,6 +78,8 @@ public class Scaffold extends Module {
     public final BooleanProperty swing = new BooleanProperty("swing", true);
     public final BooleanProperty itemSpoof = new BooleanProperty("item-spoof", false);
     public final BooleanProperty blockCounter = new BooleanProperty("block-counter", true);
+    public final FloatProperty aimSpeedMin = new FloatProperty("aim-speed-min", 8.0F, 1.0F, 20.0F);
+    public final FloatProperty aimSpeedMax = new FloatProperty("aim-speed-max", 10.0F, 1.0F, 20.0F);
 
     private boolean shouldStopSprint() {
         if (this.isTowering()) {
@@ -373,7 +376,7 @@ public class Scaffold extends Module {
                                 double relY = (double) blockData.blockPos().getY() + dy - mc.thePlayer.posY - (double) mc.thePlayer.getEyeHeight();
                                 double relZ = (double) blockData.blockPos().getZ() + dz - mc.thePlayer.posZ;
                                 float baseYaw = RotationUtil.wrapAngleDiff(this.yaw, event.getYaw());
-                                float[] rotations = RotationUtil.getRotationsTo(relX, relY, relZ, baseYaw, this.pitch);
+                                float[] rotations = RotationUtil.getRotationsTo(relX, relY, relZ, baseYaw, this.pitch, (20.0F - RandomUtil.nextFloat(this.aimSpeedMin.getValue(), this.aimSpeedMax.getValue())) / 20.0F);
                                 MovingObjectPosition mop = RotationUtil.rayTrace(rotations[0], rotations[1], mc.playerController.getBlockReachDistance(), 1.0F);
                                 if (mop != null
                                         && mop.typeOfHit == MovingObjectType.BLOCK
@@ -448,7 +451,7 @@ public class Scaffold extends Module {
                                 double dx = hitVec.xCoord - mc.thePlayer.posX;
                                 double dy = hitVec.yCoord - mc.thePlayer.posY - (double) mc.thePlayer.getEyeHeight();
                                 double dz = hitVec.zCoord - mc.thePlayer.posZ;
-                                float[] rotations = RotationUtil.getRotationsTo(dx, dy, dz, event.getYaw(), event.getPitch());
+                                float[] rotations = RotationUtil.getRotationsTo(dx, dy, dz, event.getYaw(), event.getPitch(), (20.0F - RandomUtil.nextFloat(this.aimSpeedMin.getValue(), this.aimSpeedMax.getValue())) / 20.0F);
                                 if (!(Math.abs(rotations[0] - this.yaw) < 120.0F) || !(Math.abs(rotations[1] - this.pitch) < 60.0F)) {
                                     break;
                                 }

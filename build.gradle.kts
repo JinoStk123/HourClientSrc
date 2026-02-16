@@ -56,7 +56,7 @@ loom {
 }
 
 sourceSets.main {
-//    output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
+    output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
 }
 
 // Dependencies:
@@ -85,17 +85,18 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-tasks.withType<Jar> {
-    archiveBaseName.set(jarName)
-    manifest.attributes.run {
-        this["FMLCorePluginContainsFMLMod"] = "true"
-        this["ForceLoadAsMod"] = "true"
-        this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
-        this["MixinConfigs"] = "mixins.$modid.json"
-        if (transformerFile.exists())
-            this["FMLAT"] = "${modid}_at.cfg"
+    tasks.withType<Jar> {
+        archiveBaseName.set(jarName)
+        archiveVersion.set("")
+        manifest.attributes.run {
+            this["FMLCorePluginContainsFMLMod"] = "true"
+            this["ForceLoadAsMod"] = "true"
+            this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
+            this["MixinConfigs"] = "mixins.$modid.json"
+            if (transformerFile.exists())
+                this["FMLAT"] = "${modid}_at.cfg"
+        }
     }
-}
 
 tasks.processResources {
     inputs.property("version", project.version)
@@ -109,11 +110,12 @@ tasks.processResources {
 }
 
 tasks.jar {
-    archiveClassifier.set("without-deps")
-    destinationDirectory.set(layout.buildDirectory.dir("intermediates"))
+    archiveFileName.set("$jarName.jar")
 }
 
 tasks.shadowJar {
+    archiveBaseName.set(jarName)
+    archiveVersion.set("")
     destinationDirectory.set(layout.buildDirectory.dir("intermediates"))
     archiveClassifier.set("non-obfuscated-with-deps")
     configurations = listOf(shadowImpl)
@@ -123,7 +125,7 @@ val remapJar by tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
     dependsOn(tasks.shadowJar)
     input.set(tasks.shadowJar.get().archiveFile)
     archiveClassifier.set("")
+    archiveFileName.set("$jarName.jar")
 }
 
-
-
+tasks.assemble.get().dependsOn(remapJar)

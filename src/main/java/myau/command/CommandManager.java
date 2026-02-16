@@ -20,9 +20,11 @@ public class CommandManager {
     }
 
     public void handleCommand(String string) {
-        List<String> params = Arrays.asList(string.substring(1).trim().split("\\s+"));
+        String commandPart = string.substring(".".length()).trim();
+        List<String> params = Arrays.asList(commandPart.split("\\s+"));
         ArrayList<String> arrayList = new ArrayList<>(params);
-        if (params.get(0).isEmpty()) {
+
+        if (params.isEmpty() || params.get(0).isEmpty()) {
             ChatUtil.sendFormatted(String.format("%sUnknown command&r", HourClient.clientName).replace("&", "§"));
         } else {
             for (Command command : HourClient.commandManager.commands) {
@@ -38,10 +40,10 @@ public class CommandManager {
     }
 
     public boolean isTypingCommand(String string) {
-        if (string == null || string.length() < 2) {
+        if (string == null || string.length() < 1) { // '.' (1 char) + at least one command char
             return false;
         } else {
-            return string.charAt(0) == '.' && Character.isLetterOrDigit(string.charAt(1));
+            return string.startsWith(".");
         }
     }
 

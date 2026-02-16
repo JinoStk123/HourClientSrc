@@ -4,13 +4,29 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.ksyz.accountmanager.AccountManager;
 import myau.command.CommandManager;
-import myau.command.commands.*;
+import myau.command.commands.BindCommand;
+import myau.command.commands.ConfigCommand;
+import myau.command.commands.DenickCommand;
+import myau.command.commands.FriendCommand;
+import myau.command.commands.HelpCommand;
+import myau.command.commands.HideCommand;
+import myau.command.commands.IgnCommand;
+import myau.command.commands.ItemCommand;
+import myau.command.commands.ListCommand;
+import myau.command.commands.ModuleCommand;
+import myau.command.commands.PlayerCommand;
+import myau.command.commands.ShowCommand;
+import myau.command.commands.TargetCommand;
+import myau.command.commands.ToggleCommand;
+import myau.command.commands.VclipCommand;
+import myau.command.commands.VersionCommand; // Added by Gemini
 import myau.config.Config;
 import myau.event.EventManager;
 import myau.management.*;
 import myau.module.Module;
 import myau.module.ModuleManager;
 import myau.module.modules.*;
+import myau.module.modules.Trail; // Added Trail module
 import myau.property.Property;
 import myau.property.PropertyManager;
 
@@ -20,11 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import net.minecraftforge.fml.common.Mod; // Import this class
-
-@Mod(modid = "myau", name = "HourClient+", version = "1.7")
 public class HourClient {
-    public static String clientName = "&7[&cH&6o&uu&rr Client]&r ";
+    public static String clientName = "&7[&6H&eou&6r &eClient&7]&r ";
     public static String version;
     public static RotationManager rotationManager;
     public static FloatManager floatManager;
@@ -151,7 +164,7 @@ public class HourClient {
         moduleManager.modules.put(ServerIPHider.class, new ServerIPHider());
         moduleManager.modules.put(SeasonDisplay.class, new SeasonDisplay());
         moduleManager.modules.put(GApple.class, new GApple());
-        moduleManager.modules.put(BedSurroundInfo.class, new BedSurroundInfo());
+        moduleManager.modules.put(Trail.class, new Trail()); // Added Trail module
         // moduleManager.modules.put(.class, new myau.module.modules.());
         commandManager.commands.add(new BindCommand());
 
@@ -169,6 +182,7 @@ public class HourClient {
         commandManager.commands.add(new TargetCommand());
         commandManager.commands.add(new ToggleCommand());
         commandManager.commands.add(new VclipCommand());
+        commandManager.commands.add(new VersionCommand());
         for (Module module : moduleManager.modules.values()) {
             ArrayList<Property<?>> properties = new ArrayList<>();
             for (final Field field : module.getClass().getDeclaredFields()) {

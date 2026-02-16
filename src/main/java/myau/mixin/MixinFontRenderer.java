@@ -3,6 +3,7 @@ package myau.mixin;
 import myau.HourClient;
 import myau.module.modules.AntiObfuscate;
 import myau.module.modules.NickHider;
+import myau.module.modules.ServerIPHider; // Import ServerIPHider
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -25,11 +26,19 @@ public abstract class MixinFontRenderer {
             return string;
         } else {
             AntiObfuscate antiObfuscate = (AntiObfuscate) HourClient.moduleManager.modules.get(AntiObfuscate.class);
-            if (antiObfuscate.isEnabled()) {
+            if (antiObfuscate != null && antiObfuscate.isEnabled()) {
                 string = antiObfuscate.stripObfuscated(string);
             }
+            // Apply ServerIPHider logic
+            ServerIPHider serverIPHider = (ServerIPHider) HourClient.moduleManager.modules.get(ServerIPHider.class);
+            if (serverIPHider != null && serverIPHider.isEnabled()) {
+                string = serverIPHider.replaceIP(string);
+            }
             NickHider nickHider = (NickHider) HourClient.moduleManager.modules.get(NickHider.class);
-            return nickHider.isEnabled() ? nickHider.replaceNick(string) : string;
+            if (nickHider != null && nickHider.isEnabled()) {
+                string = nickHider.replaceNick(string);
+            }
+            return string;
         }
     }
 
@@ -44,11 +53,19 @@ public abstract class MixinFontRenderer {
             return string;
         } else {
             AntiObfuscate antiObfuscate = (AntiObfuscate) HourClient.moduleManager.modules.get(AntiObfuscate.class);
-            if (antiObfuscate.isEnabled()) {
+            if (antiObfuscate != null && antiObfuscate.isEnabled()) {
                 string = antiObfuscate.stripObfuscated(string);
             }
+            // Apply ServerIPHider logic
+            ServerIPHider serverIPHider = (ServerIPHider) HourClient.moduleManager.modules.get(ServerIPHider.class);
+            if (serverIPHider != null && serverIPHider.isEnabled()) {
+                string = serverIPHider.replaceIP(string);
+            }
             NickHider nickHider = (NickHider) HourClient.moduleManager.modules.get(NickHider.class);
-            return nickHider.isEnabled() ? nickHider.replaceNick(string) : string;
+            if (nickHider != null && nickHider.isEnabled()) {
+                string = nickHider.replaceNick(string);
+            }
+            return string;
         }
     }
 

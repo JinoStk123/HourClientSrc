@@ -1,0 +1,4 @@
+KillAura.java:
+- Reverted the maximum configurable values for `minCPS` and `maxCPS` (properties "min-aps" and "max-aps") from 50 back to 30.
+
+This change reverts the KillAura attack speed range as per the user's request.

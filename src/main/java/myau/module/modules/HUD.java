@@ -295,6 +295,43 @@ public class HUD extends Module {
             GlStateManager.enableDepth();
             GlStateManager.popMatrix();
 
+            // Render Client Version in Lower Left
+            if (this.isEnabled()) {
+                String fullVersionString = String.format("Version: %s", HourClient.version);
+                float versionStringWidth = mc.fontRendererObj.getStringWidth(fullVersionString);
+                float versionStringHeight = mc.fontRendererObj.FONT_HEIGHT;
+
+                // Position in lower-right corner with offsets
+                float versionX = (float) new ScaledResolution(mc).getScaledWidth() - versionStringWidth - (float) this.offsetX.getValue();
+                float versionY = (float) new ScaledResolution(mc).getScaledHeight() - (float) this.offsetY.getValue() - versionStringHeight;
+
+                RenderUtil.enableRenderState();
+                // Optional: Add a background rectangle for better contrast, similar to other HUD elements
+                if (this.background.getValue() > 0) {
+                    RenderUtil.drawRect(
+                            versionX - 2.0F,
+                            versionY - 2.0F,
+                            versionX + versionStringWidth + 2.0F,
+                            versionY + versionStringHeight + 2.0F,
+                            new Color(0.0F, 0.0F, 0.0F, this.background.getValue().floatValue() / 100.0F).getRGB()
+                    );
+                }
+                RenderUtil.disableRenderState();
+
+                GlStateManager.pushMatrix();
+                // Ensure text is rendered at the correct scale, assuming global HUD scale for now
+                GlStateManager.scale(this.scale.getValue(), this.scale.getValue(), 1.0F);
+
+                // Draw string with shadow for contrast
+                mc.fontRendererObj.drawStringWithShadow(
+                        fullVersionString,
+                        versionX / this.scale.getValue(),
+                        versionY / this.scale.getValue(),
+                        this.getColor(System.currentTimeMillis()).getRGB() // Use existing HUD color for consistency
+                );
+                GlStateManager.popMatrix();
+            }
+
             if (this.dynamicIsland.getValue()) {
                 try {
                     myau.ui.overlay.dynamicisland.DynamicIsland.render(event, this.scale.getValue(), this.dynamicIslandRadius.getValue());
