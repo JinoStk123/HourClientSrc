@@ -160,7 +160,7 @@ public class TargetStrafe extends Module {
                         float currentPitch = event.getPitch();
                         float currentYaw = event.getYaw();
                         double deltaY = 0.0;
-                        this.targetYaw = RotationUtil.getRotationsTo(deltaX, deltaY, deltaZ, currentYaw, currentPitch, 0.0f)[0];
+                        this.targetYaw = RotationUtil.getRotationsTo(deltaX, deltaY, deltaZ, currentYaw, currentPitch)[0];
                         event.setPervRotation(this.targetYaw, 10);
                     }
                 }

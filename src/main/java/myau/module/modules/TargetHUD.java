@@ -64,7 +64,10 @@ public class TargetHUD extends Module {
     public final BooleanProperty indicator = new BooleanProperty("indicator", true);
     public final BooleanProperty outline = new BooleanProperty("outline", false);
     public final BooleanProperty animations = new BooleanProperty("animations", true);
+    public final IntProperty animDuration = new IntProperty("anim-duration", 150, 50, 1000, this.animations::getValue);
     public final BooleanProperty shadow = new BooleanProperty("shadow", true);
+    public final BooleanProperty roundedCorners = new BooleanProperty("rounded-corners", false);
+    public final IntProperty cornerRadius = new IntProperty("corner-radius", 4, 0, 15, this.roundedCorners::getValue);
     public final BooleanProperty kaOnly = new BooleanProperty("ka-only", true);
     public final BooleanProperty chatPreview = new BooleanProperty("chat-preview", false);
     public final BooleanProperty trackTarget = new BooleanProperty("track-target", false);
@@ -141,7 +144,7 @@ public class TargetHUD extends Module {
                     this.oldHealth = heal;
                     this.newHealth = heal;
                 }
-                if (!this.animations.getValue() || this.animTimer.hasTimeElapsed(150L)) {
+                if (!this.animations.getValue() || this.animTimer.hasTimeElapsed((long)this.animDuration.getValue())) {
                     this.oldHealth = this.newHealth;
                     this.newHealth = heal;
                     this.maxHealth = this.target.getMaxHealth() / 2.0F;
@@ -153,16 +156,18 @@ public class TargetHUD extends Module {
                 if (resourceLocation != null) {
                     this.headTexture = resourceLocation;
                 }
-                float elapsedTime = (float) Math.min(Math.max(this.animTimer.getElapsedTime(), 0L), 150L);
-                float healthRatio = Math.min(Math.max(RenderUtil.lerpFloat(this.newHealth, this.oldHealth, elapsedTime / 150.0F) / this.maxHealth, 0.0F), 1.0F);
+                float elapsedTime = (float) Math.min(Math.max(this.animTimer.getElapsedTime(), 0L), (long)this.animDuration.getValue());
+                float healthRatio = Math.min(Math.max(RenderUtil.lerpFloat(this.newHealth, this.oldHealth, elapsedTime / (float)this.animDuration.getValue()) / this.maxHealth, 0.0F), 1.0F);
                 Color targetColor = this.getTargetColor(this.target);
                 Color healthBarColor = this.color.getValue() == 0 ? ColorUtil.getHealthBlend(healthRatio) : targetColor;
                 float healthDeltaRatio = Math.min(Math.max((health - heal + 1.0F) / 2.0F, 0.0F), 1.0F);
                 Color healthDeltaColor = ColorUtil.getHealthBlend(healthDeltaRatio);
                 ScaledResolution scaledResolution = new ScaledResolution(mc);
+                String targetNameText = ChatColors.formatColor(String.format("&r%s&r", TeamUtil.stripName(this.target)));
+
+// Add Winning/Losing label to the name using calculateWinning()
                 float winningValue = calculateWinning();
                 String winLabel = winningValue > 0.0F ? "&aWinning:&r " : "&cLosing:&r ";
-                String targetNameText = ChatColors.formatColor(String.format("%s%s&r", winLabel, TeamUtil.stripName(this.target)));
                 int targetNameWidth = mc.fontRendererObj.getStringWidth(targetNameText);
                 String healthText = ChatColors.formatColor(
                         String.format("&r&f%s%s❤&r", healthFormat.format(heal), abs > 0.0F ? "&6" : "&c")
@@ -204,9 +209,23 @@ public class TargetHUD extends Module {
                 RenderUtil.enableRenderState();
                 int backgroundColor = new Color(0.0F, 0.0F, 0.0F, (float) this.background.getValue() / 100.0F).getRGB();
                 int outlineColor = this.outline.getValue() ? targetColor.getRGB() : new Color(0, 0, 0, 0).getRGB();
-                RenderUtil.drawOutlineRect(0.0F, 0.0F, barTotalWidth, 27.0F, 1.5F, backgroundColor, outlineColor);
-                RenderUtil.drawRect(headIconOffset + 2.0F, 22.0F, barTotalWidth - 2.0F, 25.0F, ColorUtil.darker(healthBarColor, 0.2F).getRGB());
-                RenderUtil.drawRect(headIconOffset + 2.0F, 22.0F, headIconOffset + 2.0F + healthRatio * (barTotalWidth - 2.0F - headIconOffset - 2.0F), 25.0F, healthBarColor.getRGB());
+                if (this.roundedCorners.getValue()) {
+                    float radius = (float) this.cornerRadius.getValue();
+                    // Main background and outline
+                    RenderUtil.drawRoundedRect(0, 0, barTotalWidth, 27, radius, backgroundColor);
+                    if (this.outline.getValue()) {
+                        // For rounded outline, we draw a slightly larger rounded rect with outlineColor
+                        RenderUtil.drawRoundedRect(-1, -1, barTotalWidth + 2, 29, radius + 1, outlineColor);
+                    }
+                    // Health bar background
+                    RenderUtil.drawRoundedRect(headIconOffset + 2.0F, 22, barTotalWidth - 2.0F - (headIconOffset + 2.0F), 3, radius > 2 ? 2 : radius, ColorUtil.darker(healthBarColor, 0.2F).getRGB());
+                    // Health bar foreground
+                    RenderUtil.drawRoundedRect(headIconOffset + 2.0F, 22, healthRatio * (barTotalWidth - 2.0F - headIconOffset - 2.0F), 3, radius > 2 ? 2 : radius, healthBarColor.getRGB());
+                } else {
+                    RenderUtil.drawOutlineRect(0.0F, 0.0F, barTotalWidth, 27.0F, 1.5F, backgroundColor, outlineColor);
+                    RenderUtil.drawRect(headIconOffset + 2.0F, 22.0F, barTotalWidth - 2.0F, 25.0F, ColorUtil.darker(healthBarColor, 0.2F).getRGB());
+                    RenderUtil.drawRect(headIconOffset + 2.0F, 22.0F, headIconOffset + 2.0F + healthRatio * (barTotalWidth - 2.0F - headIconOffset - 2.0F), 25.0F, healthBarColor.getRGB());
+                }
                 RenderUtil.disableRenderState();
                 GlStateManager.disableDepth();
                 GlStateManager.enableBlend();

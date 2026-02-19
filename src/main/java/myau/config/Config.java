@@ -133,7 +133,6 @@ public class Config {
             PrintWriter printWriter = new PrintWriter(new FileWriter(file));
             printWriter.println(gson.toJson(object));
             printWriter.close();
-            ChatUtil.sendFormatted(String.format("%sConfig has been saved (&a&o%s&r)&r", HourClient.clientName, file.getName()));
         } catch (IOException e) {
             ((IAccessorMinecraft) mc).getLogger().error("Error saving config: " + e.getMessage());
             ChatUtil.sendFormatted(String.format("%sConfig couldn't be saved (&c&o%s&r)&r", HourClient.clientName, file.getName()));

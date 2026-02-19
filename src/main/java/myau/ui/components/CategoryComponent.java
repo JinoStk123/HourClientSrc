@@ -1,7 +1,11 @@
 package myau.ui.components;
 
+import myau.HourClient;
 import myau.module.Module;
+import myau.module.modules.GuiModule;
+import myau.ui.ClickGui;
 import myau.ui.Component;
+import myau.util.RenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -37,13 +41,13 @@ public class CategoryComponent {
         this.width = 92;
         this.x = 5;
         this.y = 5;
-        this.bh = 13;
+        this.bh = 16;
         this.xx = 0;
         this.categoryOpened = false;
         this.dragging = false;
         int tY = this.bh + 3;
         this.marginX = 80;
-        this.marginY = 4.5;
+        this.marginY = 5.5;
         for (Module mod : modules) {
             ModuleComponent b = new ModuleComponent(mod, this, tY);
             this.modulesInCategory.add(b);
@@ -85,7 +89,7 @@ public class CategoryComponent {
 
     public void render(FontRenderer renderer) {
         this.width = 92;
-        update();
+        // Logic moved to update(mouseX, mouseY) which is now called from ClickGui
         height = 0;
         for (Component moduleRenderManager : this.modulesInCategory) {
             height += moduleRenderManager.getHeight();
@@ -94,13 +98,26 @@ public class CategoryComponent {
         if (scroll > maxScroll) scroll = maxScroll;
         if (animScroll > maxScroll) animScroll = maxScroll;
         animScroll += (scroll - animScroll) * 0.2;
-        if (!this.modulesInCategory.isEmpty() && this.categoryOpened) {
-            int displayHeight = Math.min(height, MAX_HEIGHT);
-            Gui.drawRect(this.x - 1, this.y, this.x + this.width + 1, this.y + this.bh + displayHeight + 4, new Color(0, 0, 0, 100).getRGB());
-        }
-        Gui.drawRect((this.x - 2), this.y, (this.x + this.width + 2), (this.y + this.bh + 3), new Color(0, 0, 0, 200).getRGB());
+
+        GuiModule guiModule = (GuiModule) HourClient.moduleManager.getModule(GuiModule.class);
+        float radius = (float) guiModule.cornerRadius.getValue();
+        Color pColor = new Color(guiModule.panelColor.getValue());
+        int pAlpha = (int) (guiModule.panelOpacity.getValue().floatValue() / 100.0f * 255.0f);
+        int finalPanelColor = new Color(pColor.getRed(), pColor.getGreen(), pColor.getBlue(), pAlpha).getRGB();
+        int finalTitleColor = new Color(pColor.getRed(), pColor.getGreen(), pColor.getBlue(), Math.min(255, pAlpha * 2)).getRGB();
+
+        int displayHeight = (this.categoryOpened && !this.modulesInCategory.isEmpty()) ? Math.min(height, MAX_HEIGHT) : 0;
+        int totalPanelHeight = this.bh + 3 + displayHeight;
+
+        // Draw ONE unified rounded background for the whole category panel
+        RenderUtil.drawRoundedRect(this.x - 2, this.y, this.width + 4, totalPanelHeight, radius, finalPanelColor);
+        
+        // Draw header background (only top rounded)
+        RenderUtil.drawRoundedRect(this.x - 2, this.y, this.width + 4, this.bh + 3, radius, finalTitleColor, true, !this.categoryOpened, !this.categoryOpened, true);
+
         renderer.drawString(this.categoryName, (float) (this.x + 2), (float) (this.y + 4), -1, false);
         renderer.drawString(this.categoryOpened ? "-" : "+", (float) (this.x + marginX), (float) ((double) this.y + marginY), Color.white.getRGB(), false);
+        
         if (this.categoryOpened && !this.modulesInCategory.isEmpty()) {
             int renderHeight = 0;
             ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
@@ -108,13 +125,14 @@ public class CategoryComponent {
             int bottom = this.y + this.bh + MAX_HEIGHT + 3;
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
             GL11.glScissor((int) (this.x * scale), (int) ((sr.getScaledHeight() - bottom) * scale), (int) (this.width * scale), (int) (MAX_HEIGHT * scale));
-            for (Component c2 : this.modulesInCategory) {
+            for (int i = 0; i < this.modulesInCategory.size(); i++) {
+                Component c2 = this.modulesInCategory.get(i);
                 int compHeight = c2.getHeight();
                 if (renderHeight + compHeight > animScroll &&
                         renderHeight < animScroll + MAX_HEIGHT) {
                     int drawY = (int) (renderHeight - animScroll);
                     c2.setComponentStartAt(this.bh + 3 + drawY);
-                    c2.draw(new AtomicInteger(0));
+                    c2.draw(new AtomicInteger(i));
                 }
                 renderHeight += compHeight;
             }
@@ -123,6 +141,20 @@ public class CategoryComponent {
                 float scrollY = (float) this.y + this.bh + 3 + (float) (animScroll * MAX_HEIGHT / height);
                 Gui.drawRect(this.x + this.width - 2, (int) scrollY, this.x + this.width, (int) (scrollY + ((float) MAX_HEIGHT * MAX_HEIGHT / height)), new Color(255, 255, 255, 60).getRGB());
             }
+        }
+    }
+
+    public void update(int mouseX, int mouseY) {
+        int renderHeight = 0;
+        for (Component component : this.modulesInCategory) {
+            int compHeight = component.getHeight();
+            if (this.categoryOpened && renderHeight + compHeight > animScroll &&
+                    renderHeight < animScroll + MAX_HEIGHT) {
+                int drawY = (int) (renderHeight - animScroll);
+                component.setComponentStartAt(this.bh + 3 + drawY);
+                component.update(mouseX, mouseY);
+            }
+            renderHeight += compHeight;
         }
     }
 

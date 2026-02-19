@@ -1,12 +1,16 @@
 
 package myau.ui.components;
 
+import myau.HourClient;
 import myau.enums.ChatColors;
+import myau.module.modules.HUD;
 import myau.property.properties.BooleanProperty;
 import myau.ui.Component;
+import myau.util.RenderUtil;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;
 
+import java.awt.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CheckBoxComponent implements Component {
@@ -26,9 +30,18 @@ public class CheckBoxComponent implements Component {
 
 
     public void draw(AtomicInteger offset) {
+        float cx = this.module.category.getX() + 4;
+        float cy = this.module.category.getY() + this.offsetY + 4;
+        float size = 6;
+        
+        RenderUtil.drawRoundedRect(cx, cy, size, size, 1.5f, new Color(0, 0, 0, 100).getRGB());
+        if (this.property.getValue()) {
+            RenderUtil.drawRoundedRect(cx + 1, cy + 1, size - 2, size - 2, 1f, ((HUD) HourClient.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis(), offset.get()).getRGB());
+        }
+
         GL11.glPushMatrix();
         GL11.glScaled(0.5D, 0.5D, 0.5D);
-        Minecraft.getMinecraft().fontRendererObj.drawString(this.property.getName().replace("-", " ") + ": " + ChatColors.formatColor(this.property.formatValue()), (float) ((this.module.category.getX() + 4) * 2), (float) ((this.module.category.getY() + this.offsetY + 5) * 2), -1, false);
+        Minecraft.getMinecraft().fontRendererObj.drawString(this.property.getName().replace("-", " ") + ": " + ChatColors.formatColor(this.property.formatValue()), (cx + size + 2) * 2, (this.module.category.getY() + this.offsetY + 5) * 2, -1, false);
         GL11.glPopMatrix();
     }
 

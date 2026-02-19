@@ -32,7 +32,7 @@ public class FPScounter
     public final IntProperty offsetY = new IntProperty("Y-Offset", 0, -200, 200);
     public final FloatProperty scale = new FloatProperty("Scale", 1.0f, 0.6f, 2.0f);
     public final IntProperty blurStrength = new IntProperty("Blur Strength", 6, 1, 10);
-    public final IntProperty cornerRadius = new IntProperty("Corner Radius", 8, 5, 20);
+    public final IntProperty cornerRadius = new IntProperty("Corner Radius", 16, 5, 20);
     public final IntProperty backgroundAlpha = new IntProperty("Background Alpha", 160, 0, 255);
     public final ColorProperty textColor = new ColorProperty("Text Color", Color.WHITE.getRGB());
 

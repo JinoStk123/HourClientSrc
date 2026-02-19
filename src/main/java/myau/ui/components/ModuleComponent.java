@@ -2,13 +2,16 @@ package myau.ui.components;
 
 import myau.HourClient;
 import myau.module.Module;
+import myau.module.modules.GuiModule;
 import myau.module.modules.HUD;
 import myau.property.Property;
 import myau.property.properties.*;
+import myau.ui.ClickGui;
 import myau.ui.Component;
 import myau.ui.dataset.impl.FloatSlider;
 import myau.ui.dataset.impl.IntSlider;
 import myau.ui.dataset.impl.PercentageSlider;
+import myau.util.RenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import org.lwjgl.opengl.GL11;
@@ -89,12 +92,31 @@ public class ModuleComponent implements Component {
 
     public void draw(AtomicInteger offset) {
         int textColor;
+        boolean hovered = isHovered(ClickGui.getMouseX(), ClickGui.getMouseY());
+        
         if (this.mod.isEnabled()) {
             textColor = ((HUD) HourClient.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis(), offset.get()).getRGB();
         } else {
-            textColor = new Color(102, 102, 102).getRGB();
+            textColor = hovered ? new Color(200, 200, 200).getRGB() : new Color(160, 160, 160).getRGB();
         }
+
+        float x = this.category.getX() - 2;
+        float y = this.category.getY() + this.offsetY;
+        float w = this.category.getWidth() + 4;
+        float h = 16;
+        
+        // Use flat highlight for hovered or expanded modules to keep it seamless
+        if (hovered) {
+            RenderUtil.drawRect(x, y, x + w, y + h, new Color(255, 255, 255, 20).getRGB());
+        }
+        
+        if (this.panelExpand) {
+            // Draw a subtle separator or background for expanded settings
+            RenderUtil.drawRect(x, y + h, x + w, y + getHeight(), new Color(0, 0, 0, 40).getRGB());
+        }
+
         Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.mod.getName(), (float) (this.category.getX() + this.category.getWidth() / 2 - Minecraft.getMinecraft().fontRendererObj.getStringWidth(this.mod.getName()) / 2), (float) (this.category.getY() + this.offsetY + 4), textColor);
+        
         if (this.panelExpand && !this.settings.isEmpty()) {
             for (Component c : this.settings) {
                 if (c.isVisible()) {
@@ -103,8 +125,6 @@ public class ModuleComponent implements Component {
                 }
             }
         }
-
-
     }
 
     public int getHeight() {

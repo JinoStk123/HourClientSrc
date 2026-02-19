@@ -26,7 +26,7 @@ public class RotationUtil {
     }
 
     public static float smoothAngle(float angle, float smoothFactor) {
-        return angle * (0.5f + 0.5f * (1.0f - Math.max(0.0f, Math.min(1.0f, smoothFactor))));
+        return angle * (0.5f + 0.5f * (1.0f - Math.max(0.0f, Math.min(1.0f, smoothFactor + RandomUtil.nextFloat(-0.1f, 0.1f)))));
     }
 
     public static float quantizeAngle(float angle) {
@@ -43,8 +43,8 @@ public class RotationUtil {
         return RotationUtil.getRotations(deltaX, deltaY, deltaZ, yaw, pitch, maxAngle, smoothFactor);
     }
 
-    public static float[] getRotationsTo(double targetX, double targetY, double targetZ, float currentYaw, float currentPitch, float smoothFactor) {
-        return RotationUtil.getRotations(targetX, targetY, targetZ, currentYaw, currentPitch, 180.0f, smoothFactor);
+    public static float[] getRotationsTo(double targetX, double targetY, double targetZ, float currentYaw, float currentPitch) {
+        return RotationUtil.getRotations(targetX, targetY, targetZ, currentYaw, currentPitch, 180.0f, 0.0f);
     }
 
     public static float[] getRotations(double targetX, double targetY, double targetZ, float currentYaw, float currentPitch, float maxAngle, float smoothFactor) {

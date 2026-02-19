@@ -2,40 +2,41 @@ package myau.ui.overlay.dynamicisland;
 
 import myau.HourClient;
 import myau.events.Render2DEvent;
-import myau.module.modules.TargetHUD;
+import myau.module.modules.FPScounter;
+import myau.module.modules.HUD;
 import myau.util.RenderUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
+import javax.vecmath.Vector4d;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class DynamicIsland {
-    private static final Minecraft mc = Minecraft.getMinecraft();
-    public static final List<IslandTrigger> TRIGGERS = new ArrayList<>();
+    private static Minecraft mc = Minecraft.getMinecraft();
+    private static FontRenderer fontRenderer = mc.fontRendererObj;
 
-    // Animation states
-    private static float animX, animY, animW, animH;
-    private static boolean initialized = false;
-    private static boolean targetHudRegistered = false;
+    private static List<IslandTrigger> TRIGGERS = new ArrayList<>();
 
     static {
         TRIGGERS.add(new ScaffoldIsland());
         TRIGGERS.add(new DefaultIsland());
     }
 
-    public static void render(Render2DEvent event, float hudScale, int cornerRadius) {
-        if (!targetHudRegistered && HourClient.moduleManager != null) {
-            try {
-                TargetHUD targetHUD = (TargetHUD) HourClient.moduleManager.getModule(TargetHUD.class);
-                if (targetHUD != null) {
-                    TRIGGERS.add(new TargetHUDIsland(targetHUD));
-                }
-            } catch (Exception ignored) {
-            }
-            targetHudRegistered = true;
-        }
+    // Animation state variables
+    private static float animX, animY, animW, animH;
+    private static boolean initialized = false;
+    private static boolean targetHudRegistered = false; // Flag to ensure TargetHUD is registered only once
 
+    public static void render(Render2DEvent event, float hudScale, int cornerRadius) {
         if (TRIGGERS.isEmpty()) return;
 
         TRIGGERS.sort((a, b) -> Integer.compare(b.getIslandPriority(), a.getIslandPriority()));
@@ -68,7 +69,9 @@ public class DynamicIsland {
         float w = animW / hudScale;
         float h = animH / hudScale;
 
-        int clampedCornerRadius = Math.min(cornerRadius, (int) Math.min(w, h) / 2);
+        // Fetch corner radius from FPScounter
+        int cornerRadiusValue = ((Number) ((FPScounter) HourClient.moduleManager.getModule(FPScounter.class)).cornerRadius.getValue()).intValue();
+        int clampedCornerRadius = Math.min(cornerRadiusValue, (int) Math.min(w, h) / 2);
 
         RenderUtil.enableRenderState();
         
@@ -86,5 +89,14 @@ public class DynamicIsland {
 
         float progress = Math.min(1.0f, animW / targetW);
         trigger.renderIsland(event, x, y, w, h, progress);
+    }
+
+    public static void addTrigger(IslandTrigger trigger) {
+        TRIGGERS.add(trigger);
+        TRIGGERS.sort(Comparator.comparingInt(IslandTrigger::getIslandPriority).reversed());
+    }
+
+    public static void addIsland(IslandTrigger trigger) {
+        addTrigger(trigger);
     }
 }

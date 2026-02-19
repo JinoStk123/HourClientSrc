@@ -1,10 +1,15 @@
 package myau.ui.overlay.dynamicisland;
 
+import myau.HourClient;
 import myau.events.Render2DEvent;
+import myau.module.modules.FPScounter;
+import myau.module.modules.HUD;
 import myau.module.modules.TargetHUD;
 import myau.util.RenderUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.EntityLivingBase;
@@ -16,9 +21,11 @@ import java.awt.Color;
 public class TargetHUDIsland implements CustomIslandTrigger {
     private final TargetHUD parent;
     private final Minecraft mc = Minecraft.getMinecraft();
+    private static FontRenderer fontRenderer;
 
     public TargetHUDIsland(TargetHUD parent) {
         this.parent = parent;
+        fontRenderer = mc.fontRendererObj;
     }
 
     @Override
@@ -85,13 +92,17 @@ public class TargetHUDIsland implements CustomIslandTrigger {
         Gui.drawScaledCustomSizeModalRect((int) x + 5, (int) y + 5, 8, 8, 8, 8, 20, 20, 64, 64);
 
         String name = target.getName();
-        mc.fontRendererObj.drawStringWithShadow(name == null ? "Unknown" : name, x + 30, y + 6, -1);
+        fontRenderer.drawStringWithShadow(name == null ? "Unknown" : name, x + 30, y + 6, -1);
 
         float maxHealth = target.getMaxHealth() <= 0.0001f ? 1.0f : target.getMaxHealth();
         float healthPercent = Math.max(0f, Math.min(1f, target.getHealth() / maxHealth));
         float barWidth = Math.max(10f, w - 40f);
-        RenderUtil.drawRect(x + 30, y + 18, x + 30 + barWidth, y + 22, new Color(0, 0, 0, 100).getRGB());
-        RenderUtil.drawRect(x + 30, y + 18, x + 30 + (barWidth * healthPercent), y + 22, getHealthColor(healthPercent));
+
+        // Fetch corner radius from FPScounter
+        int cornerRadius = ((Number) ((FPScounter) HourClient.moduleManager.getModule(FPScounter.class)).cornerRadius.getValue()).intValue();
+
+        RenderUtil.drawRoundedRect(x + 30, y + 18, barWidth, 4, cornerRadius, new Color(0, 0, 0, 100).getRGB());
+        RenderUtil.drawRoundedRect(x + 30, y + 18, barWidth * healthPercent, 4, cornerRadius, getHealthColor(healthPercent));
     }
 
     private int getHealthColor(float pct) {

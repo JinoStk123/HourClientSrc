@@ -25,6 +25,7 @@ import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
+import static myau.util.ShaderUtil.drawQuads;
 
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector4d;
@@ -318,16 +319,64 @@ public class RenderUtil {
         GlStateManager.resetColor();
     }
 
-    public static void drawRoundedRect(int x, int y, int width, int height, int radius, int color) {
-        drawRect(x + radius, y, x + width - radius, y + height, color);
-        drawRect(x, y + radius, x + radius, y + height - radius, color);
-        drawRect(x + width - radius, y + radius, x + width, y + height - radius, color);
+    public static void drawRoundedRect(float x, float y, float width, float height, float radius, int color) {
+        drawRoundedRect(x, y, width, height, radius, color, true, true, true, true);
+    }
 
-        // Corners
-        drawCircle(x + radius, y + radius, radius, color);
-        drawCircle(x + width - radius, y + radius, radius, color);
-        drawCircle(x + radius, y + height - radius, radius, color);
-        drawCircle(x + width - radius, y + height - radius, radius, color);
+    public static void drawRoundedRect(float x, float y, float width, float height, float radius, int color, boolean topLeft, boolean bottomLeft, boolean bottomRight, boolean topRight) {
+        float x2 = x + width;
+        float y2 = y + height;
+        
+        if (radius > width / 2) radius = width / 2;
+        if (radius > height / 2) radius = height / 2;
+        
+        RenderUtil.enableRenderState();
+        RenderUtil.setColor(color);
+        
+        GL11.glEnable(GL11.GL_LINE_SMOOTH);
+        GL11.glBegin(GL11.GL_POLYGON);
+        
+        // Top Left
+        if (topLeft) {
+            for (int i = 180; i <= 270; i += 5) {
+                GL11.glVertex2d(x + radius + Math.sin(i * Math.PI / 180.0) * radius, y + radius + Math.cos(i * Math.PI / 180.0) * radius);
+            }
+        } else {
+            GL11.glVertex2d(x, y);
+        }
+        
+        // Bottom Left
+        if (bottomLeft) {
+            for (int i = 270; i <= 360; i += 5) {
+                GL11.glVertex2d(x + radius + Math.sin(i * Math.PI / 180.0) * radius, y2 - radius + Math.cos(i * Math.PI / 180.0) * radius);
+            }
+        } else {
+            GL11.glVertex2d(x, y2);
+        }
+        
+        // Bottom Right
+        if (bottomRight) {
+            for (int i = 0; i <= 90; i += 5) {
+                GL11.glVertex2d(x2 - radius + Math.sin(i * Math.PI / 180.0) * radius, y2 - radius + Math.cos(i * Math.PI / 180.0) * radius);
+            }
+        } else {
+            GL11.glVertex2d(x2, y2);
+        }
+        
+        // Top Right
+        if (topRight) {
+            for (int i = 90; i <= 180; i += 5) {
+                GL11.glVertex2d(x2 - radius + Math.sin(i * Math.PI / 180.0) * radius, y + radius + Math.cos(i * Math.PI / 180.0) * radius);
+            }
+        } else {
+            GL11.glVertex2d(x2, y);
+        }
+        
+        GL11.glEnd();
+        GL11.glDisable(GL11.GL_LINE_SMOOTH);
+        
+        RenderUtil.disableRenderState();
+        GlStateManager.resetColor();
     }
 
     public static void drawCircle(int centerX, int centerY, int radius, int color) {

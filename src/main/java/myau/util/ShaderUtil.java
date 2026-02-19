@@ -11,6 +11,7 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class ShaderUtil {
     private static final Minecraft mc = Minecraft.getMinecraft();
+    private static ShaderUtil roundedRectShader;
     private final int programID;
 
     public ShaderUtil(String fragmentShaderLoc, String vertexShaderLoc) {
@@ -70,7 +71,72 @@ public class ShaderUtil {
     }
 
     public ShaderUtil(String fragmentShaderLoc) {
-        this(fragmentShaderLoc, "client/shader/vertex.vsh");
+        int program = glCreateProgram();
+        try {
+            int fragmentShaderID;
+            if (fragmentShaderLoc.equals("shadow")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(bloom.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("roundRectTexture")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(roundRectTexture.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("roundRectOutline")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(roundRectOutline.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("roundedRect")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(roundedRect.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("roundedRectGradient")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(roundedRectGradient.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("gradient")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(gradient.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("mainmenu")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(mainmenu.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("kawaseUp")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(kawaseUp.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("kawaseDown")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(kawaseDown.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("kawaseUpBloom")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(kawaseUpBloom.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("kawaseDownBloom")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(kawaseDownBloom.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("gaussianBlur")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(gaussianBlur.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("cape")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(cape.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("outline")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(outline.getBytes()), GL_FRAGMENT_SHADER);
+            } else if (fragmentShaderLoc.equals("glow")) {
+                fragmentShaderID = createShader(new ByteArrayInputStream(glow.getBytes()), GL_FRAGMENT_SHADER);
+            } else {
+                fragmentShaderID = createShader(mc.getResourceManager().getResource(new ResourceLocation(fragmentShaderLoc)).getInputStream(), GL_FRAGMENT_SHADER);
+            }
+            glAttachShader(program, fragmentShaderID);
+
+            int vertexShaderID = createShader(new ByteArrayInputStream(vertex.getBytes()), GL_VERTEX_SHADER);
+            glAttachShader(program, vertexShaderID);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        glLinkProgram(program);
+        int status = glGetProgrami(program, GL_LINK_STATUS);
+
+        if (status == 0) {
+            throw new IllegalStateException("Shader failed to link!");
+        }
+        this.programID = program;
+    }
+
+    private final String vertex = "#version 120\n" +
+            "void main(void) {\n" +
+            "gl_TexCoord[0] = gl_MultiTexCoord0;\n" +
+            "gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n" +
+            "}";
+
+    public static ShaderUtil getRoundedRectShader() {
+        if (roundedRectShader == null) {
+            roundedRectShader = new ShaderUtil("roundedRect");
+        }
+        return roundedRectShader;
     }
 
     public void init() {

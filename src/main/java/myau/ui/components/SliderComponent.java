@@ -6,6 +6,7 @@ import myau.ui.ClickGui;
 import myau.ui.Component;
 import myau.ui.callback.GuiInput;
 import myau.ui.dataset.Slider;
+import myau.util.RenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import org.lwjgl.opengl.GL11;
@@ -34,13 +35,22 @@ public class SliderComponent implements Component {
     }
 
     public void draw(AtomicInteger offset) {
-        Gui.drawRect(this.parentModule.category.getX() + 4, this.parentModule.category.getY() + this.offsetY + 11, this.parentModule.category.getX() + 4 + this.parentModule.category.getWidth() - 8, this.parentModule.category.getY() + this.offsetY + 15, -12302777);
-        int sliderStart = this.parentModule.category.getX() + 4;
-        int sliderEnd = this.parentModule.category.getX() + 4 + (int) this.sliderWidth;
-        if (sliderEnd - sliderStart > 84) {
-            sliderEnd = sliderStart + 84;
+        float x = this.parentModule.category.getX() + 4;
+        float y = this.parentModule.category.getY() + this.offsetY + 11;
+        float w = this.parentModule.category.getWidth() - 8;
+        float h = 4;
+        
+        RenderUtil.drawRoundedRect(x, y, w, h, 2, -12302777);
+        
+        float sliderWidth = (float) this.sliderWidth;
+        if (sliderWidth > w) {
+            sliderWidth = w;
         }
-        Gui.drawRect(sliderStart, this.parentModule.category.getY() + this.offsetY + 11, sliderEnd, this.parentModule.category.getY() + this.offsetY + 15, ((HUD) HourClient.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis(), offset.get()).getRGB());
+        
+        if (sliderWidth > 0) {
+            RenderUtil.drawRoundedRect(x, y, sliderWidth, h, 2, ((HUD) HourClient.moduleManager.modules.get(HUD.class)).getColor(System.currentTimeMillis(), offset.get()).getRGB());
+        }
+
         GL11.glPushMatrix();
         GL11.glScaled(0.5D, 0.5D, 0.5D);
         Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.slider.getName() + ": " + this.slider.getValueColorString(), (float) ((int) ((float) (this.parentModule.category.getX() + 4) * 2.0F)), (float) ((int) ((float) (this.parentModule.category.getY() + this.offsetY + 3) * 2.0F)), -1);

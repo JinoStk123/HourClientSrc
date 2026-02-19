@@ -9,6 +9,7 @@ import myau.events.Render2DEvent;
 import myau.events.TickEvent;
 import myau.mixin.IAccessorGuiChat;
 import myau.module.Module;
+import myau.module.modules.FPScounter;
 import myau.util.ColorUtil;
 import myau.util.RenderUtil;
 import myau.property.properties.*;
@@ -44,6 +45,7 @@ public class HUD extends Module {
     public final IntProperty offsetY = new IntProperty("offset-y", 2, 0, 255);
     public final FloatProperty scale = new FloatProperty("scale", 1.0F, 0.5F, 1.5F);
     public final PercentProperty background = new PercentProperty("background", 25);
+    public final IntProperty cornerRadius = new IntProperty("corner-radius", 0, 0, 10);
     public final BooleanProperty dynamicIsland = new BooleanProperty("dynamic-island", true);
     public final IntProperty dynamicIslandRadius = new IntProperty("dynamic-island-radius", 5, 0, 15, this.dynamicIsland::getValue);
     public final BooleanProperty showBar = new BooleanProperty("bar", true);
@@ -155,6 +157,7 @@ public class HUD extends Module {
 
     @EventTarget
     public void onRender2D(Render2DEvent event) {
+        if (!this.isEnabled()) return;
 
         if (this.chatOutline.getValue() && mc.currentScreen instanceof GuiChat) {
             String text = ((IAccessorGuiChat) mc.currentScreen).getInputField().getText().trim();
@@ -189,22 +192,81 @@ public class HUD extends Module {
 
             long l = System.currentTimeMillis();
             long offset = 0L;
-            for (Module module : this.activeModules) {
+            
+            for (int i = 0; i < this.activeModules.size(); i++) {
+                Module module = this.activeModules.get(i);
                 String moduleName = this.getModuleName(module);
                 String[] moduleSuffix = this.getModuleSuffix(module);
                 float totalWidth = (float) (this.calculateStringWidth(moduleName, moduleSuffix) - (this.shadow.getValue() ? 0 : 1));
                 int color = this.getColor(l, offset).getRGB();
-                RenderUtil.enableRenderState();
+                
+                // ArrayList Background logic (per module but seamless rounding)
                 if (this.background.getValue() > 0) {
-                    RenderUtil.drawRect(
-                            x / this.scale.getValue() - 1.0F - (this.posX.getValue() == 0 ? 0.0F : totalWidth),
-                            y / this.scale.getValue() - (this.posY.getValue() == 0 ? (offset == 0L ? 1.0F : 0.0F) : (this.shadow.getValue() ? 1.0F : 0.0F)),
-                            x / this.scale.getValue() + 1.0F + (this.posX.getValue() == 0 ? totalWidth : 0.0F),
-                            y / this.scale.getValue() + height + (this.posY.getValue() == 0 ? (this.shadow.getValue() ? 1.0F : 0.0F) : (offset == 0L ? 1.0F : 0.0F)),
-                            new Color(0.0F, 0.0F, 0.0F, this.background.getValue().floatValue() / 100.0F).getRGB()
-                    );
+                    float rectX = x / this.scale.getValue() - 1.0F - (this.posX.getValue() == 0 ? 0.0F : totalWidth);
+                    float rectY = y / this.scale.getValue() - (this.posY.getValue() == 0 ? (offset == 0L ? 1.0F : 0.0F) : (this.shadow.getValue() ? 1.0F : 0.0F));
+                    float rectW = totalWidth + 2.0F;
+                    float rectH = height + (this.shadow.getValue() ? 1.0F : 0.0F);
+                    
+                    if (this.posY.getValue() == 1) { // BOTTOM alignment, list goes up
+                        rectY -= rectH;
+                    }
+
+                    int bgColor = new Color(0.0F, 0.0F, 0.0F, this.background.getValue().floatValue() / 100.0F).getRGB();
+                    float radius = (float) this.cornerRadius.getValue();
+                    
+                    if (radius > 0) {
+                        boolean isTop = (i == 0);
+                        boolean isBottom = (i == this.activeModules.size() - 1);
+                        
+                        // Decide which corners to round for seamless staircase
+                        boolean roundLeftTop = false;
+                        boolean roundLeftBottom = false;
+                        boolean roundRightTop = false;
+                        boolean roundRightBottom = false;
+
+                        if (this.posX.getValue() == 1) { // Right aligned (Staircase on the left)
+                            // Right side is usually straight against the screen edge
+                            roundRightTop = isTop && this.posY.getValue() == 0;
+                            roundRightBottom = isBottom && this.posY.getValue() == 1;
+                            
+                            // Left side is the staircase
+                            if (isTop) roundLeftTop = true;
+                            if (isBottom) roundLeftBottom = true;
+                            
+                            // Check neighbor widths for inner/outer rounding
+                            if (!isTop) {
+                                float prevWidth = (float) (this.calculateStringWidth(this.getModuleName(this.activeModules.get(i - 1)), this.getModuleSuffix(this.activeModules.get(i - 1))) - (this.shadow.getValue() ? 0 : 1));
+                                if (totalWidth > prevWidth) roundLeftTop = true;
+                            }
+                            if (!isBottom) {
+                                float nextWidth = (float) (this.calculateStringWidth(this.getModuleName(this.activeModules.get(i + 1)), this.getModuleSuffix(this.activeModules.get(i + 1))) - (this.shadow.getValue() ? 0 : 1));
+                                if (totalWidth > nextWidth) roundLeftBottom = true;
+                            }
+                        } else { // Left aligned (Staircase on the right)
+                            roundLeftTop = isTop && this.posY.getValue() == 0;
+                            roundLeftBottom = isBottom && this.posY.getValue() == 1;
+                            
+                            if (isTop) roundRightTop = true;
+                            if (isBottom) roundRightBottom = true;
+                            
+                            if (!isTop) {
+                                float prevWidth = (float) (this.calculateStringWidth(this.getModuleName(this.activeModules.get(i - 1)), this.getModuleSuffix(this.activeModules.get(i - 1))) - (this.shadow.getValue() ? 0 : 1));
+                                if (totalWidth > prevWidth) roundRightTop = true;
+                            }
+                            if (!isBottom) {
+                                float nextWidth = (float) (this.calculateStringWidth(this.getModuleName(this.activeModules.get(i + 1)), this.getModuleSuffix(this.activeModules.get(i + 1))) - (this.shadow.getValue() ? 0 : 1));
+                                if (totalWidth > nextWidth) roundRightBottom = true;
+                            }
+                        }
+
+                        RenderUtil.drawRoundedRect(rectX, rectY, rectW, rectH, radius, bgColor, roundLeftTop, roundLeftBottom, roundRightBottom, roundRightTop);
+                    } else {
+                        RenderUtil.drawRect(rectX, rectY, rectX + rectW, rectY + rectH, bgColor);
+                    }
                 }
+
                 if (this.showBar.getValue()) {
+                    RenderUtil.enableRenderState();
                     if (this.shadow.getValue()) {
                         RenderUtil.drawRect(
                                 x / this.scale.getValue() + (this.posX.getValue() == 0 ? -3.0F : 1.0F),
@@ -229,8 +291,9 @@ public class HUD extends Module {
                                 color
                         );
                     }
+                    RenderUtil.disableRenderState();
                 }
-                RenderUtil.disableRenderState();
+                
                 GlStateManager.disableDepth();
                 if (this.shadow.getValue()) {
                     mc.fontRendererObj
@@ -246,13 +309,13 @@ public class HUD extends Module {
                             );
                 }
                 if (this.suffixes.getValue() && moduleSuffix.length > 0) {
-                    float width = (float) mc.fontRendererObj.getStringWidth(moduleName) + 3.0F;
+                    float width_suffix = (float) mc.fontRendererObj.getStringWidth(moduleName) + 3.0F;
                     for (String string : moduleSuffix) {
                         if (this.shadow.getValue()) {
                             mc.fontRendererObj
                                     .drawStringWithShadow(
                                             string,
-                                            x / this.scale.getValue() - (this.posX.getValue() == 1 ? totalWidth : 0.0F) + width,
+                                            x / this.scale.getValue() - (this.posX.getValue() == 1 ? totalWidth : 0.0F) + width_suffix,
                                             y / this.scale.getValue(),
                                             ChatColors.GRAY.toAwtColor()
                                     );
@@ -260,13 +323,13 @@ public class HUD extends Module {
                             mc.fontRendererObj
                                     .drawString(
                                             string,
-                                            x / this.scale.getValue() - (this.posX.getValue() == 1 ? totalWidth : 0.0F) + width,
+                                            x / this.scale.getValue() - (this.posX.getValue() == 1 ? totalWidth : 0.0F) + width_suffix,
                                             y / this.scale.getValue() + (this.posY.getValue() == 1 ? 1.0F : 0.0F),
                                             ChatColors.GRAY.toAwtColor(),
                                             false
                                     );
                         }
-                        width += (float) mc.fontRendererObj.getStringWidth(string) + (this.shadow.getValue() ? 3.0F : 2.0F);
+                        width_suffix += (float) mc.fontRendererObj.getStringWidth(string) + (this.shadow.getValue() ? 3.0F : 2.0F);
                     }
                 }
                 y += (height + (this.shadow.getValue() ? 1.0F : 0.0F)) * this.scale.getValue() * (this.posY.getValue() == 0 ? 1.0F : -1.0F);
@@ -295,46 +358,10 @@ public class HUD extends Module {
             GlStateManager.enableDepth();
             GlStateManager.popMatrix();
 
-            // Render Client Version in Lower Left
-            if (this.isEnabled()) {
-                String fullVersionString = String.format("Version: %s", HourClient.version);
-                float versionStringWidth = mc.fontRendererObj.getStringWidth(fullVersionString);
-                float versionStringHeight = mc.fontRendererObj.FONT_HEIGHT;
-
-                // Position in lower-right corner with offsets
-                float versionX = (float) new ScaledResolution(mc).getScaledWidth() - versionStringWidth - (float) this.offsetX.getValue();
-                float versionY = (float) new ScaledResolution(mc).getScaledHeight() - (float) this.offsetY.getValue() - versionStringHeight;
-
-                RenderUtil.enableRenderState();
-                // Optional: Add a background rectangle for better contrast, similar to other HUD elements
-                if (this.background.getValue() > 0) {
-                    RenderUtil.drawRect(
-                            versionX - 2.0F,
-                            versionY - 2.0F,
-                            versionX + versionStringWidth + 2.0F,
-                            versionY + versionStringHeight + 2.0F,
-                            new Color(0.0F, 0.0F, 0.0F, this.background.getValue().floatValue() / 100.0F).getRGB()
-                    );
-                }
-                RenderUtil.disableRenderState();
-
-                GlStateManager.pushMatrix();
-                // Ensure text is rendered at the correct scale, assuming global HUD scale for now
-                GlStateManager.scale(this.scale.getValue(), this.scale.getValue(), 1.0F);
-
-                // Draw string with shadow for contrast
-                mc.fontRendererObj.drawStringWithShadow(
-                        fullVersionString,
-                        versionX / this.scale.getValue(),
-                        versionY / this.scale.getValue(),
-                        this.getColor(System.currentTimeMillis()).getRGB() // Use existing HUD color for consistency
-                );
-                GlStateManager.popMatrix();
-            }
-
             if (this.dynamicIsland.getValue()) {
                 try {
-                    myau.ui.overlay.dynamicisland.DynamicIsland.render(event, this.scale.getValue(), this.dynamicIslandRadius.getValue());
+                    // Corrected line: Using FPScounter's cornerRadius for DynamicIsland
+                    myau.ui.overlay.dynamicisland.DynamicIsland.render(event, this.scale.getValue(), ((Number) ((FPScounter) HourClient.moduleManager.getModule(FPScounter.class)).cornerRadius.getValue()).intValue());
                 } catch (Throwable ignored) {
                 }
             }
